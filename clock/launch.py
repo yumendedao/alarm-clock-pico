@@ -1,4 +1,4 @@
-import clock_control
+from clock import clock_control
 
 if __name__ == '__main__':
     print("launch start")

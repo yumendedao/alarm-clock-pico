@@ -1,8 +1,7 @@
 import threading
 import time
 
-import alarm_clock
-import time_show
+from clock import alarm_clock, time_show
 
 
 def init():
