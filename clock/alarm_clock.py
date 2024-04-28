@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 import time
-import threading
+import _thread
 
 hour = 0
 minute = 0
@@ -116,7 +116,7 @@ def is_alarm():
 def start():
     global time_start_flag
     time_start_flag = True
-    time_run()
+    init()
 
 
 def stop():
@@ -148,5 +148,5 @@ def time_run():
 
 
 def init():
-    time_thread = threading.Thread(target=time_run)
-    time_thread.start()
+    _thread.start_new_thread(time_run, [])
+
