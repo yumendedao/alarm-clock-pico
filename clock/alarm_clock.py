@@ -3,18 +3,32 @@
 
 import time
 import _thread
+from clock import clock_control
 
 hour = 0
 minute = 0
 second = 0
+second = 57
 time_start_flag = True
 
 alarm_hour = 0
-alarm_minute = 0
+alarm_minute = 10
+alarm_flag = False
 
 change_type_set = 0
 change_type_add = 1
 change_type_sub = 2
+set_flash = False
+flash_count = 0
+
+set_close_index = 0
+hour_index = 1
+minute_index = 2
+second_index = 3
+alarm_hour_index = 4
+alarm_minute_index = 5
+
+clock_seq = [set_close_index, hour_index, minute_index, second_index, alarm_hour_index, alarm_minute_index]
 
 
 def get_hour():
@@ -38,13 +52,42 @@ def get_second():
     return second
 
 
+def get_alarm_hour():
+    global alarm_hour
+    if alarm_hour < 0 or alarm_hour >= 24:
+        alarm_hour = 0
+    return alarm_hour
+
+
+def get_alarm_minute():
+    global alarm_minute
+    if alarm_minute < 0 or alarm_minute >= 60:
+        alarm_minute = 0
+    return alarm_minute
+
+
 def get_time_str(time_type=None):
-    if 'hour' == time_type:
+    global flash_count
+
+    if clock_control.set_index == time_type:
+        flash_count = flash_count + 1
+        if flash_count > 2:
+            flash_count = 0
+            return '  '
+
+    if clock_control.set_index == set_close_index:
+        flash_count = 0
+
+    if hour_index == time_type:
         time_value = get_hour()
-    elif 'minute' == time_type:
+    elif minute_index == time_type:
         time_value = get_minute()
-    elif 'second' == time_type:
+    elif second_index == time_type:
         time_value = get_second()
+    elif alarm_hour_index == time_type:
+        time_value = get_alarm_hour()
+    elif alarm_minute_index == time_type:
+        time_value = get_alarm_minute()
     else:
         print('get_time_str error type: ' + str(time_type))
         return
@@ -52,23 +95,25 @@ def get_time_str(time_type=None):
         time_value = '0' + str(time_value)
     else:
         time_value = str(time_value)
+
     return time_value
 
 
 def get_time_show_str():
-    time_str = get_time_str('hour') + ':' + get_time_str('minute') + ':' + get_time_str('second')
-    print('time_str=' + time_str)
+    time_str = get_time_str(hour_index) + ':' + get_time_str(minute_index) + ':' + get_time_str(second_index)
     return time_str
 
 
+def get_alarm_show_str():
+    return 'alarm  ' + get_time_str(alarm_hour_index) + ':' + get_time_str(alarm_minute_index) + ":00"
+
+
 def change_time(time_type=None, change_type=change_type_set, value=None):
+    print('change_time, time_type:' + str(time_type) + ", change_type:" + str(change_type) + ", value:" + str(value))
     if not check_time_type(time_type):
         return
-    if value is None or not value.isdigit():
-        print('change_time error value:' + str(value))
-        return
 
-    if 'hour' == time_type:
+    if hour_index == time_type:
         global hour
         if change_type == change_type_set:
             hour = value
@@ -77,24 +122,42 @@ def change_time(time_type=None, change_type=change_type_set, value=None):
         elif change_type == change_type_sub:
             hour = hour - value
         get_hour()
-    elif 'minute' == time_type:
+    elif minute_index == time_type:
         global minute
         if change_type == change_type_set:
             minute = value
         elif change_type == change_type_add:
-            minute = hour + value
+            minute = minute + value
         elif change_type == change_type_sub:
-            minute = hour - value
+            minute = minute - value
         get_minute()
-    elif 'second' == time_type:
+    elif second_index == time_type:
         global second
         if change_type == change_type_set:
             second = value
         elif change_type == change_type_add:
-            second = hour + value
+            second = second + value
         elif change_type == change_type_sub:
-            second = hour - value
+            second = second - value
         get_second()
+    elif alarm_hour_index == time_type:
+        global alarm_hour
+        if change_type == change_type_set:
+            alarm_hour = value
+        elif change_type == change_type_add:
+            alarm_hour = alarm_hour + value
+        elif change_type == change_type_sub:
+            alarm_hour = alarm_hour - value
+        get_alarm_minute()
+    elif alarm_minute_index == time_type:
+        global alarm_minute
+        if change_type == change_type_set:
+            alarm_minute = value
+        elif change_type == change_type_add:
+            alarm_minute = alarm_minute + value
+        elif change_type == change_type_sub:
+            alarm_minute = alarm_minute - value
+        get_alarm_minute()
     else:
         print('change_time error time_type: ' + str(time_type))
         return
@@ -102,15 +165,15 @@ def change_time(time_type=None, change_type=change_type_set, value=None):
 
 
 def check_time_type(time_type):
-    if 'hour' == time_type or 'minute' == time_type or 'second' == time_type:
-        return True
-    else:
+    if time_type < 0 or time_type >= len(clock_seq):
         print('error time_type: ' + str(time_type))
         return False
+    else:
+        return True
 
 
 def is_alarm():
-    return hour == alarm_hour and minute == alarm_minute
+    return hour == alarm_hour and minute == alarm_minute and second == 0
 
 
 def start():
@@ -128,10 +191,9 @@ def time_run():
 
     while True:
         time_str = get_time_show_str()
-        print(time_str)
         global time_start_flag
         if not time_start_flag:
-            print('time stop, time_str=' + str(time_str))
+            print('time_start_flag false, time stop, time_str=' + str(time_str))
             return
         time.sleep(1)
         global second, minute, hour
@@ -149,4 +211,7 @@ def time_run():
 
 def init():
     _thread.start_new_thread(time_run, [])
+
+
+
 

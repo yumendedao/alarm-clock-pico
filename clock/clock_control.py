@@ -1,23 +1,56 @@
 import _thread
+
 import utime
+from machine import Pin, ADC
 
 from clock import alarm_clock, time_show, clock_ring
 
+# 初始化摇杆模块（ADC功能）
+rocker_x = ADC(27)
+rocker_y = ADC(26)
+button = Pin(22, Pin.IN, Pin.PULL_UP)
+
+set_index = 0
+
+set_value_up = 255
+set_value_down = 0
+btn_push = False
+btn_release = True
+set_change_once = False
+
+
+# 读取X轴的值，返回[0, 255]
+def read_x():
+    value = int(rocker_x.read_u16() * 256 / 65536)
+    return value
+
+
+# 读取Y轴的值，返回[0, 255]
+def read_y():
+    value = int(rocker_y.read_u16() * 256 / 65536)
+    return value
+
+
+# 读取按键的状态，按下返回True，松开返回False
+def btn_state():
+    press = False
+    if button.value() == 0:
+        press = True
+    return press
+
 
 def init():
-    alarm_clock.start();
+    alarm_clock.start()
 
 
 def clock_show_run():
-
     while True:
-        time_show_str = alarm_clock.get_time_show_str()
-        time_show.show_time(time_show_str)
+        time_str = time_show.show_time()
+        print(time_str)
+        set_change()
         if alarm_clock.is_alarm():
             clock_ring.task_to_be_triggered()
         utime.sleep(1)
-        
-        
 
 
 def clock_show():
@@ -25,5 +58,52 @@ def clock_show():
     return
 
 
+def clock_set_change():
+    set_seq_length = len(alarm_clock.clock_seq)
+    global set_index
+    set_index = set_index + 1
+    if set_index > set_seq_length:
+        set_index = 0
+    print('clock_set_change: ' + str(set_index))
 
-    
+
+def set_change():
+    global set_index
+    global btn_push, btn_release
+    value_y = read_y()
+    state = btn_state()
+    if state:
+        btn_push = True
+    else:
+        btn_release = True
+    if btn_push and btn_release:
+        clock_set_change()
+        btn_push = False
+        btn_release = True
+
+    if set_index == alarm_clock.set_close_index:
+        return
+    elif value_y == set_value_up:
+        print("set_value_up, set_index:" + str(set_index))
+        if set_index == alarm_clock.hour_index:
+            alarm_clock.change_time(alarm_clock.hour_index, alarm_clock.change_type_add, 1)
+        elif set_index == alarm_clock.minute_index:
+            alarm_clock.change_time(alarm_clock.minute_index, alarm_clock.change_type_add, 1)
+        elif set_index == alarm_clock.second_index:
+            alarm_clock.change_time(alarm_clock.second_index, alarm_clock.change_type_add, 1)
+        elif set_index == alarm_clock.alarm_hour_index:
+            alarm_clock.change_time(alarm_clock.alarm_hour_index, alarm_clock.change_type_add, 1)
+        elif set_index == alarm_clock.alarm_minute_index:
+            alarm_clock.change_time(alarm_clock.larm_minute_index, alarm_clock.change_type_add, 1)
+    elif value_y == set_value_down:
+        print("set_value_down, set_index:" + str(set_index))
+        if set_index == alarm_clock.hour_index:
+            alarm_clock.change_time(alarm_clock.hour_index, alarm_clock.change_type_sub, 1)
+        elif set_index == alarm_clock.minute_index:
+            alarm_clock.change_time(alarm_clock.minute_index, alarm_clock.change_type_sub, 1)
+        elif set_index == alarm_clock.second_index:
+            alarm_clock.change_time(alarm_clock.second_index, alarm_clock.change_type_sub, 1)
+        elif set_index == alarm_clock.alarm_hour_index:
+            alarm_clock.change_time(alarm_clock.alarm_hour_index, alarm_clock.change_type_sub, 1)
+        elif set_index == alarm_clock.alarm_minute_index:
+            alarm_clock.change_time(alarm_clock.alarm_minute_index, alarm_clock.change_type_sub, 1)
