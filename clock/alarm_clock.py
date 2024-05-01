@@ -8,11 +8,11 @@ from clock import clock_control
 hour = 0
 minute = 0
 second = 0
-second = 57
+second = 55
 time_start_flag = True
 
 alarm_hour = 0
-alarm_minute = 10
+alarm_minute = 1
 alarm_flag = False
 
 change_type_set = 0
