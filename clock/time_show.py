@@ -10,6 +10,7 @@ oled = SSD1306_I2C(128, 32, i2c)
 
 show_time_flag = True;
 
+
 def clear_screen():
     oled.fill(0)
     oled.show()

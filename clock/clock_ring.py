@@ -1,13 +1,12 @@
 import _thread
+import random
 
 import utime
-from machine import ADC
+import ws2812b
 from machine import Pin, PWM
-
-from clock import time_show, human_body
-
 from ultrasonic import ultrasonic
 
+from clock import time_show, human_body
 
 Echo = Pin(13, Pin.IN)
 
@@ -15,11 +14,18 @@ Trig = Pin(14, Pin.OUT)
 
 ultrasonic = ultrasonic(Trig, Echo)
 
+# 蜂鸣器控件
 buzzer = PWM(Pin(15))
 buzzer.freq(262)
 buzzer.duty_u16(0)
 
 # light = ADC(28)
+
+ring_pin = 17  # 灯环的引脚
+numpix = 8  # RGB灯的数量
+# 初始化RGB灯环
+strip = ws2812b.ws2812b(numpix, 0, ring_pin)
+strip.fill(0, 0, 0)  # 清空RGB缓存
 
 ring_flag = False
 
@@ -31,6 +37,8 @@ Z = [0]
 
 def get_value():
     return ultrasonic.Distance_accurate()
+
+
 #     return int(light.read_u16() * 101 / 65536)
 
 
@@ -57,10 +65,14 @@ def pwm_tone(tone, time):
 
 
 def close_ring():
+    global ring_flag
     ring_flag = False
+    strip.fill(0, 0, 0)
+    strip.show()
 
 
 def task_to_be_triggered():
+    global ring_flag
     ring_flag = True
     j = 0
     lightInit = get_value()
@@ -74,6 +86,7 @@ def task_to_be_triggered():
         k = 0
         for k in range(len(song) / 2):
             time_show.show_time()
+            ring_rgb()
             if human_body.detect_someone():
                 human_body.led_on()
             else:
@@ -86,7 +99,20 @@ def task_to_be_triggered():
                 break
         if ((get_value() - lightInit) > 40 or (lightInit - get_value()) > 40 or alltime >= 3000):
             break
+    close_ring()
 
 
 def ring():
     _thread.start_new_thread(task_to_be_triggered, [])
+
+
+def ring_rgb():
+    i = random.randint(0, numpix - 1)
+    strip.show()
+    strip.fill(0, 0, 0)
+    r = random.randint(0, 256)
+    g = random.randint(0, 256)
+    b = random.randint(0, 256)
+    # 设置RGB灯环中某个灯的颜色
+    strip.set_pixel(i, r, g, b)
+    strip.show()

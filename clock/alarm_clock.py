@@ -8,7 +8,7 @@ from clock import clock_control
 hour = 0
 minute = 0
 second = 0
-second = 55
+second = 58
 time_start_flag = True
 
 alarm_hour = 0
@@ -72,7 +72,7 @@ def get_time_str(time_type=None):
     if clock_control.set_index == time_type:
         flash_count = flash_count + 1
         print(flash_count)
-        if flash_count > 1:
+        if flash_count > 2:
             flash_count = 0            
             return '  '
 
@@ -221,6 +221,7 @@ def time_run():
 
     while True:
         time_str = get_time_show_str()
+        print(time_str)
         global time_start_flag
         if not time_start_flag:
             print('time_start_flag false, time stop, time_str=' + str(time_str))

@@ -5,7 +5,7 @@ from machine import Pin, ADC
 
 from clock import alarm_clock, time_show, clock_ring, human_body
 
-# 初始化摇杆模块（ADC功能）
+# 初始化摇杆模块（ADC功能）: 遥感控件
 rocker_x = ADC(27)
 rocker_y = ADC(26)
 button = Pin(22, Pin.IN, Pin.PULL_UP)
@@ -17,6 +17,9 @@ set_value_down = 0
 btn_push = False
 btn_release = True
 set_change_once = False
+
+human_body_flag = False
+human_body_second = 0
 
 
 # 读取X轴的值，返回[0, 255]
@@ -44,26 +47,26 @@ def init():
 
 
 def clock_show_run():
-    human_body_flag = False
+    global human_body_flag, human_body_second
     human_body_second = 0
     while True:
-        time_str = time_show.show_time()
-        print(time_str)
+        time_show.show_time()
         set_change()
         if alarm_clock.is_alarm():
             clock_ring.task_to_be_triggered()
+
         if human_body.detect_someone():
             human_body_flag = True
             human_body_second = 0
             human_body.led_on()
         elif human_body_flag and human_body_second < 5:
             human_body_second = human_body_second + 1
-            human_body.open_light()
+            human_body.led_on()
         else:
             human_body_flag = False
             human_body_second = 0
             human_body.led_off()
-        utime.sleep(1)
+        utime.sleep(0.5)
 
 
 def clock_show():
@@ -79,13 +82,15 @@ def clock_set_change():
         set_index = 0
     print('clock_set_change: ' + str(set_index))
 
+
 #     return int(light.read_u16() * 101 / 65536)
-def human_body_flag():
+def get_human_body_flag():
     if human_body.detect_someone():
-            if human_body_flag:
-                human_body_second = human_body_second + 1
-            else:
-                human_body_second = 0
+        if human_body_flag:
+            human_body_second = human_body_second + 1
+        else:
+            human_body_second = 0
+
 
 def set_change():
     global set_index
@@ -114,7 +119,7 @@ def set_change():
         elif set_index == alarm_clock.alarm_hour_index:
             alarm_clock.change_time(alarm_clock.alarm_hour_index, alarm_clock.change_type_add, 1)
         elif set_index == alarm_clock.alarm_minute_index:
-            alarm_clock.change_time(alarm_clock.larm_minute_index, alarm_clock.change_type_add, 1)
+            alarm_clock.change_time(alarm_clock.alarm_minute_index, alarm_clock.change_type_add, 1)
     elif value_y == set_value_down:
         print("set_value_down, set_index:" + str(set_index))
         if set_index == alarm_clock.hour_index:
