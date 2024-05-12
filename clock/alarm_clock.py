@@ -72,7 +72,7 @@ def get_time_str(time_type=None):
     if clock_control.set_index == time_type:
         flash_count = flash_count + 1
         print(flash_count)
-        if flash_count > 2:
+        if flash_count > 3:
             flash_count = 0            
             return '  '
 

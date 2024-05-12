@@ -93,7 +93,7 @@ def task_to_be_triggered():
                 human_body.led_off()
             if not ring_flag:
                 return
-            pwm_tone(song[2 * k], song[2 * k + 1] * 5)
+            pwm_tone(song[2 * k], song[2 * k + 1] * 1)
             alltime = alltime + song[2 * k + 1]
             if ((get_value() - lightInit) > 40 or (lightInit - get_value()) > 40 or alltime >= 3000):
                 break

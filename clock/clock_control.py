@@ -66,7 +66,7 @@ def clock_show_run():
             human_body_flag = False
             human_body_second = 0
             human_body.led_off()
-        utime.sleep(0.5)
+        utime.sleep(0.2)
 
 
 def clock_show():
