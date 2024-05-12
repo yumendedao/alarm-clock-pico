@@ -4,13 +4,22 @@ import utime
 from machine import ADC
 from machine import Pin, PWM
 
-from clock import time_show
+from clock import time_show, human_body
+
+from ultrasonic import ultrasonic
+
+
+Echo = Pin(13, Pin.IN)
+
+Trig = Pin(14, Pin.OUT)
+
+ultrasonic = ultrasonic(Trig, Echo)
 
 buzzer = PWM(Pin(15))
 buzzer.freq(262)
 buzzer.duty_u16(0)
 
-light = ADC(28)
+# light = ADC(28)
 
 ring_flag = False
 
@@ -21,7 +30,8 @@ Z = [0]
 
 
 def get_value():
-    return int(light.read_u16() * 101 / 65536)
+    return ultrasonic.Distance_accurate()
+#     return int(light.read_u16() * 101 / 65536)
 
 
 def choose_song(index):
@@ -57,13 +67,17 @@ def task_to_be_triggered():
     print("lightInit:" + str(lightInit))
     alltime = 0
     song = choose_song(1)
-    while j < 1:
+    while j < 3:
         if not ring_flag:
             return
         j = j + 1
         k = 0
         for k in range(len(song) / 2):
             time_show.show_time()
+            if human_body.detect_someone():
+                human_body.led_on()
+            else:
+                human_body.led_off()
             if not ring_flag:
                 return
             pwm_tone(song[2 * k], song[2 * k + 1] * 5)

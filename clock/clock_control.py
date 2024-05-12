@@ -3,7 +3,7 @@ import _thread
 import utime
 from machine import Pin, ADC
 
-from clock import alarm_clock, time_show, clock_ring
+from clock import alarm_clock, time_show, clock_ring, human_body
 
 # 初始化摇杆模块（ADC功能）
 rocker_x = ADC(27)
@@ -44,12 +44,25 @@ def init():
 
 
 def clock_show_run():
+    human_body_flag = False
+    human_body_second = 0
     while True:
         time_str = time_show.show_time()
         print(time_str)
         set_change()
         if alarm_clock.is_alarm():
             clock_ring.task_to_be_triggered()
+        if human_body.detect_someone():
+            human_body_flag = True
+            human_body_second = 0
+            human_body.led_on()
+        elif human_body_flag and human_body_second < 5:
+            human_body_second = human_body_second + 1
+            human_body.open_light()
+        else:
+            human_body_flag = False
+            human_body_second = 0
+            human_body.led_off()
         utime.sleep(1)
 
 
@@ -66,6 +79,13 @@ def clock_set_change():
         set_index = 0
     print('clock_set_change: ' + str(set_index))
 
+#     return int(light.read_u16() * 101 / 65536)
+def human_body_flag():
+    if human_body.detect_someone():
+            if human_body_flag:
+                human_body_second = human_body_second + 1
+            else:
+                human_body_second = 0
 
 def set_change():
     global set_index
