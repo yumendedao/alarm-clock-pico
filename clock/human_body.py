@@ -18,4 +18,4 @@ def led_off():
 def detect_someone():
     if human.value() == 1:
         return True
-    return Falses
+    return False
